@@ -314,7 +314,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-black">
-      <h1 className="text-3xl font-bold mb-4 text-white text-center mt-8">CodePlay: GitHub File Browser</h1>
       <div className="flex flex-1 w-screen h-screen gap-0" style={{ minHeight: '100vh' }}>
         {/* Left pane: 1/6 width */}
         <div className="flex flex-col bg-zinc-900 border-r border-zinc-700 p-4" style={{ width: '16.6667%', height: '100vh', maxHeight: '100vh' }}>
