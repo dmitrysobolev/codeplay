@@ -69,6 +69,111 @@ function getLanguageFromFilename(filename: string): Language | undefined {
   return undefined;
 }
 
+// Utility: Convert flat file list to tree structure
+function buildFileTree(paths: string[]): FileNode[] {
+  const root: { [key: string]: FileNode } = {};
+  paths.forEach(path => {
+    const parts = path.split("/");
+    let current = root;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (!current[part]) {
+        current[part] = {
+          name: part,
+          path: parts.slice(0, i + 1).join("/"),
+          type: i === parts.length - 1 ? "file" : "folder",
+          children: i === parts.length - 1 ? undefined : {},
+        };
+      }
+      if (i < parts.length - 1) {
+        current = current[part].children!;
+      }
+    }
+  });
+  function toArray(obj: { [key: string]: FileNode }): FileNode[] {
+    return Object.values(obj).map(node =>
+      node.type === "folder"
+        ? { ...node, children: toArray(node.children!) }
+        : node
+    );
+  }
+  return toArray(root);
+}
+
+type FileNode = {
+  name: string;
+  path: string;
+  type: "file" | "folder";
+  children?: FileNode[] | { [key: string]: FileNode };
+};
+
+// Recursive tree view component
+function FileTree({ nodes, selectedFile, onSelect }: {
+  nodes: FileNode[];
+  selectedFile: string | null;
+  onSelect: (file: string) => void;
+}) {
+  const [openFolders, setOpenFolders] = useState<{ [path: string]: boolean }>({});
+
+  // Helper to collect all folder paths recursively
+  function collectFolderPaths(nodes: FileNode[], acc: Set<string>) {
+    for (const node of nodes) {
+      if (node.type === "folder") {
+        acc.add(node.path);
+        if (Array.isArray(node.children)) {
+          collectFolderPaths(node.children, acc);
+        }
+      }
+    }
+  }
+
+  // Expand all folders by default when nodes change
+  useEffect(() => {
+    const allFolders = new Set<string>();
+    collectFolderPaths(nodes, allFolders);
+    setOpenFolders(Object.fromEntries(Array.from(allFolders).map(path => [path, true])));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes]);
+
+  const toggleFolder = (path: string) => {
+    setOpenFolders(prev => ({ ...prev, [path]: !prev[path] }));
+  };
+
+  return (
+    <ul className="pl-4">
+      {nodes.map(node => (
+        <li key={node.path} className="break-all">
+          {node.type === "folder" ? (
+            <div>
+              <button
+                type="button"
+                className="text-yellow-400 font-bold bg-transparent border-none cursor-pointer mr-1"
+                onClick={() => toggleFolder(node.path)}
+                aria-label={openFolders[node.path] ? "Collapse folder" : "Expand folder"}
+              >
+                {openFolders[node.path] ? "▼" : "▶"}
+              </button>
+              <span className="text-yellow-300">{node.name}</span>
+              {openFolders[node.path] && node.children && (
+                <FileTree nodes={node.children as FileNode[]} selectedFile={selectedFile} onSelect={onSelect} />
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              className={`text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "font-bold text-blue-200" : ""}`}
+              onClick={() => onSelect(node.path)}
+              aria-pressed={selectedFile === node.path}
+            >
+              {node.name}
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function Home() {
   const [repoInput, setRepoInput] = useState("");
   const [files, setFiles] = useState<string[] | null>(null);
@@ -235,21 +340,11 @@ export default function Home() {
         <div className="md:w-1/3 w-full bg-zinc-900 border border-zinc-700 rounded-lg shadow p-4 max-h-[70vh] overflow-y-auto">
           <h2 className="text-xl font-semibold mb-2 text-white">Text Files</h2>
           {files ? (
-            <ul className="list-disc pl-6">
-              {files.map(f => (
-                <li key={f} className="break-all">
-                  <button
-                    type="button"
-                    className={`text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === f ? "font-bold text-blue-200" : ""}`}
-                    onClick={() => handleSelectFile(f)}
-                    onKeyDown={e => handleFileKeyDown(e, f)}
-                    aria-pressed={selectedFile === f}
-                  >
-                    {f}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <FileTree
+              nodes={buildFileTree(files)}
+              selectedFile={selectedFile}
+              onSelect={file => handleSelectFile(file)}
+            />
           ) : (
             <div className="italic text-gray-400">No files loaded.</div>
           )}
