@@ -444,10 +444,25 @@ export default function Home() {
                     style={style}
                   >
                     {tokens.map((line, i) => (
-                      <div key={i} {...getLineProps({ line, key: i })}>
-                        {line.map((token, key) => (
-                          <span key={key} {...getTokenProps({ token, key })} />
-                        ))}
+                      <div key={i} {...getLineProps({ line, key: i })} style={{ display: 'flex' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            width: '2.5em',
+                            userSelect: 'none',
+                            color: '#888',
+                            textAlign: 'right',
+                            marginRight: '1em',
+                          }}
+                          className="pr-2 select-none"
+                        >
+                          {i + 1}
+                        </span>
+                        <span style={{ flex: 1 }}>
+                          {line.map((token, key) => (
+                            <span key={key} {...getTokenProps({ token, key })} />
+                          ))}
+                        </span>
                       </div>
                     ))}
                   </pre>
