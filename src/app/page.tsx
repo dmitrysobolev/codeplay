@@ -317,7 +317,7 @@ export default function Home() {
       <h1 className="text-3xl font-bold mb-4 text-white text-center mt-8">CodePlay: GitHub File Browser</h1>
       <div className="flex flex-1 w-full max-w-7xl mx-auto gap-0" style={{ minHeight: '70vh' }}>
         {/* Left pane: 1/6 width */}
-        <div className="flex flex-col bg-zinc-900 border-r border-zinc-700 p-4" style={{ width: '16.6667%' }}>
+        <div className="flex flex-col bg-zinc-900 border-r border-zinc-700 p-4" style={{ width: '16.6667%', height: '100vh', maxHeight: '100vh' }}>
           <div className="flex flex-col gap-2 mb-4">
             <label htmlFor="repo" className="font-semibold text-white">GitHub Repo URL or owner/repo:</label>
             <input
