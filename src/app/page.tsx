@@ -351,7 +351,7 @@ export default function Home() {
           </div>
         </div>
         {/* Right pane: 5/6 width */}
-        <div className="flex-1 border-l border-zinc-700 bg-zinc-900 p-4 flex flex-col min-h-[300px]">
+        <div className="flex-1 border-l border-zinc-700 bg-zinc-900 p-4 flex flex-col h-screen min-h-0">
           <div className="flex items-center gap-4 mb-2">
             <span className="font-mono text-sm text-gray-300 flex-1">
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
@@ -365,7 +365,7 @@ export default function Home() {
               {isPlaying ? "Pause" : "Play"}
             </button>
           </div>
-          <div className="flex-1 min-h-[200px] max-h-[80vh] overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {fileLoading && selectedFile && <div className="text-gray-300">Loading file...</div>}
             {fileError && selectedFile && <div className="text-red-400">{fileError}</div>}
             {fileContent && selectedFile && (
@@ -383,7 +383,7 @@ export default function Home() {
                 }) => (
                   <pre
                     ref={scrollRef}
-                    className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 max-h-[80vh] overflow-y-auto ${className}`}
+                    className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto ${className}`}
                     style={style}
                   >
                     {tokens.map((line, i) => (
