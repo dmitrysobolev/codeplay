@@ -189,6 +189,49 @@ export default function Home() {
   const scrollRef = useRef<HTMLPreElement | null>(null);
   const scrollInterval = useRef<NodeJS.Timeout | null>(null);
   const [nextFileCache, setNextFileCache] = useState<{ path: string, content: string } | null>(null);
+  // Resizable left pane state
+  const [leftWidth, setLeftWidth] = useState(300); // px
+  const minLeftWidth = 180;
+  const maxLeftWidth = 600;
+  const dragging = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
+  // Helper to set user-select on body
+  function setBodyUserSelect(value: string) {
+    document.body.style.userSelect = value;
+    // For Safari
+    (document.body.style as any).webkitUserSelect = value;
+  }
+
+  // Mouse event handlers for resizing
+  useEffect(() => {
+    function onMouseMove(e: MouseEvent) {
+      if (!dragging.current) return;
+      const newWidth = Math.min(
+        maxLeftWidth,
+        Math.max(minLeftWidth, startWidth.current + (e.clientX - startX.current))
+      );
+      setLeftWidth(newWidth);
+    }
+    function onMouseUp() {
+      dragging.current = false;
+      document.body.style.cursor = '';
+      setBodyUserSelect('');
+    }
+    if (dragging.current) {
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = 'col-resize';
+      setBodyUserSelect('none');
+    }
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      setBodyUserSelect('');
+    };
+  }, [dragging.current]);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -315,8 +358,11 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-black">
       <div className="flex flex-1 w-screen h-screen gap-0" style={{ minHeight: '100vh' }}>
-        {/* Left pane: 1/6 width */}
-        <div className="flex flex-col bg-zinc-900 border-r border-zinc-700 p-4" style={{ width: '16.6667%', height: '100vh', maxHeight: '100vh' }}>
+        {/* Left pane: resizable */}
+        <div
+          className="flex flex-col bg-zinc-900 border-r border-zinc-700 p-4"
+          style={{ width: leftWidth, height: '100vh', maxHeight: '100vh', minWidth: minLeftWidth, maxWidth: maxLeftWidth }}
+        >
           <div className="flex flex-col gap-2 mb-4">
             <label htmlFor="repo" className="font-semibold text-white">GitHub Repo URL</label>
             <input
@@ -350,6 +396,17 @@ export default function Home() {
             )}
           </div>
         </div>
+        {/* Divider */}
+        <div
+          style={{ width: 6, cursor: 'col-resize', zIndex: 10 }}
+          className="bg-zinc-800 hover:bg-zinc-700 transition-colors duration-100"
+          onMouseDown={e => {
+            e.preventDefault(); // Prevent text selection
+            dragging.current = true;
+            startX.current = e.clientX;
+            startWidth.current = leftWidth;
+          }}
+        />
         {/* Right pane: 5/6 width */}
         <div className="flex-1 border-l border-zinc-700 bg-zinc-900 p-4 flex flex-col h-screen min-h-0">
           <div className="flex items-center gap-4 mb-2">
