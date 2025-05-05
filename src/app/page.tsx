@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Highlight, themes } from "prism-react-renderer";
 
 const GITHUB_TOKEN = "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";
