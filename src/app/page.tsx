@@ -446,29 +446,32 @@ export default function Home() {
                 }) => (
                   <pre
                     ref={scrollRef}
-                    className={`rounded p-4 whitespace-pre text-sm transition-all text-gray-100 h-full overflow-y-auto overflow-x-auto w-full ${className}`}
+                    className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto w-full ${className}`}
                     style={style}
                   >
                     {tokens.map((line, i) => (
-                      <div key={i} {...getLineProps({ line, key: i })} style={{ display: 'flex' }}>
+                      <div
+                        key={i}
+                        {...getLineProps({ line, key: i })}
+                        style={{ position: 'relative', paddingLeft: '3.5em' }}
+                      >
                         <span
                           style={{
-                            display: 'inline-block',
+                            position: 'absolute',
+                            left: 0,
                             width: '2.5em',
                             userSelect: 'none',
                             color: '#888',
                             textAlign: 'right',
-                            marginRight: '1em',
+                            paddingRight: '1em',
                           }}
-                          className="pr-2 select-none"
+                          className="select-none"
                         >
                           {i + 1}
                         </span>
-                        <span>
-                          {line.map((token, key) => (
-                            <span key={key} {...getTokenProps({ token, key })} />
-                          ))}
-                        </span>
+                        {line.map((token, key) => (
+                          <span key={key} {...getTokenProps({ token, key })} />
+                        ))}
                       </div>
                     ))}
                   </pre>
