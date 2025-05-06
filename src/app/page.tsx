@@ -44,15 +44,25 @@ async function fetchFiles(owner: string, repo: string, branch: string, token: st
 
 async function fetchFileContent(owner: string, repo: string, path: string, branch: string, token: string): Promise<string | null> {
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`;
+  console.log('[fetchFileContent] Fetching:', url, 'for path:', path);
   const res = await fetch(url, {
     headers: { Authorization: `token ${token}` },
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    let errorMsg = '';
+    try {
+      const data = await res.json();
+      errorMsg = data.message || '';
+    } catch {}
+    console.error(`[fetchFileContent] Failed to fetch ${path}: status=${res.status} ${res.statusText} message=${errorMsg}`);
+    return null;
+  }
   const data = await res.json();
-  if (data.encoding === "base64" && data.content) {
+  if (data.encoding === "base64" && typeof data.content === "string") {
     try {
       return atob(data.content.replace(/\n/g, ""));
-    } catch {
+    } catch (e) {
+      console.error(`[fetchFileContent] Failed to decode base64 for ${path}:`, e);
       return null;
     }
   }
@@ -215,7 +225,7 @@ export default function Home() {
 
   // Auto-scroll effect
   useEffect(() => {
-    if (!isPlaying || !fileContent) return;
+    if (!isPlaying || fileContent === null) return;
     const el = scrollRef.current;
     if (!el) return;
     const scrollStep = 1; // px per tick
@@ -223,30 +233,38 @@ export default function Home() {
     let finished = false;
     function scrollDown() {
       if (!el) return;
-      if (el.scrollTop + el.clientHeight < el.scrollHeight) {
-        el.scrollTop += scrollStep;
-      } else if (!finished) {
-        finished = true;
-        setIsPlaying(false);
-        if (el.scrollHeight <= el.clientHeight + 2) { // file fits on one screen
-          setTimeout(() => {
+      if (fileContent === '' || el.scrollHeight <= el.clientHeight + 2) {
+        if (!finished) {
+          finished = true;
+          const moveNext = () => {
             if (files && selectedFile) {
               const orderedFiles = flattenFileTree(buildFileTree(files));
               const idx = orderedFiles.indexOf(selectedFile);
               if (idx !== -1 && idx + 1 < orderedFiles.length) {
                 handleSelectFile(orderedFiles[idx + 1], true, true);
+              } else {
+                setIsPlaying(false);
               }
+            } else {
+              setIsPlaying(false);
             }
-          }, 1000);
-        } else {
-          if (files && selectedFile) {
-            const orderedFiles = flattenFileTree(buildFileTree(files));
-            const idx = orderedFiles.indexOf(selectedFile);
-            if (idx !== -1 && idx + 1 < orderedFiles.length) {
-              setTimeout(() => {
-                handleSelectFile(orderedFiles[idx + 1], true, true);
-              }, 500);
-            }
+          };
+          setTimeout(moveNext, 1000);
+        }
+        return;
+      }
+      if (el.scrollTop + el.clientHeight < el.scrollHeight) {
+        el.scrollTop += scrollStep;
+      } else if (!finished) {
+        finished = true;
+        setIsPlaying(false);
+        if (files && selectedFile) {
+          const orderedFiles = flattenFileTree(buildFileTree(files));
+          const idx = orderedFiles.indexOf(selectedFile);
+          if (idx !== -1 && idx + 1 < orderedFiles.length) {
+            setTimeout(() => {
+              handleSelectFile(orderedFiles[idx + 1], true, true);
+            }, 500);
           }
         }
       }
