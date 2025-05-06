@@ -468,31 +468,35 @@ export default function Home() {
                     className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto w-full ${className}`}
                     style={style}
                   >
-                    {tokens.map((line, i) => (
-                      <div
-                        key={i}
-                        {...getLineProps({ line, key: i })}
-                        style={{ position: 'relative', paddingLeft: '3.5em' }}
-                      >
-                        <span
-                          style={{
-                            position: 'absolute',
-                            left: 0,
-                            width: '2.5em',
-                            userSelect: 'none',
-                            color: '#888',
-                            textAlign: 'right',
-                            paddingRight: '1em',
-                          }}
-                          className="select-none"
+                    {tokens.map((line, i) => {
+                      const { key, ...lineProps } = getLineProps({ line, key: i });
+                      return (
+                        <div
+                          key={i}
+                          {...lineProps}
+                          style={{ position: 'relative', paddingLeft: '3.5em' }}
                         >
-                          {i + 1}
-                        </span>
-                        {line.map((token, key) => (
-                          <span key={key} {...getTokenProps({ token, key })} />
-                        ))}
-                      </div>
-                    ))}
+                          <span
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              width: '2.5em',
+                              userSelect: 'none',
+                              color: '#888',
+                              textAlign: 'right',
+                              paddingRight: '1em',
+                            }}
+                            className="select-none"
+                          >
+                            {i + 1}
+                          </span>
+                          {line.map((token, key) => {
+                            const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key });
+                            return <span key={key} {...tokenProps} />;
+                          })}
+                        </div>
+                      );
+                    })}
                   </pre>
                 )}
               </Highlight>
