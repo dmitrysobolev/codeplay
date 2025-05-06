@@ -201,6 +201,20 @@ function FileTree({ nodes, selectedFile, onSelect }: {
   );
 }
 
+function IconButton({ onClick, disabled, ariaLabel, children }: { onClick: () => void; disabled?: boolean; ariaLabel: string; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      className="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-zinc-700 hover:bg-zinc-600 text-white"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function Home() {
   const [repoInput, setRepoInput] = useState("");
   const [files, setFiles] = useState<string[] | null>(null);
@@ -468,6 +482,21 @@ export default function Home() {
     }
   }, [githubToken]);
 
+  const orderedFiles = files ? flattenFileTree(buildFileTree(files)) : [];
+  const currentIndex = selectedFile ? orderedFiles.indexOf(selectedFile) : -1;
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex !== -1 && currentIndex < orderedFiles.length - 1;
+  const handlePrev = () => {
+    if (hasPrev) {
+      handleSelectFile(orderedFiles[currentIndex - 1], true);
+    }
+  };
+  const handleNext = () => {
+    if (hasNext) {
+      handleSelectFile(orderedFiles[currentIndex + 1], true);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-black">
       <div className="flex flex-1 w-screen h-screen gap-0" style={{ minHeight: '100vh' }}>
@@ -585,12 +614,30 @@ export default function Home() {
             <span className="font-mono text-sm text-gray-300 flex-1">
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
             </span>
+            <IconButton
+              onClick={handlePrev}
+              disabled={!hasPrev || fileLoading || !!fileError}
+              ariaLabel="Previous"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <polygon points="16,5 8,12 16,19" fill="currentColor" />
+              </svg>
+            </IconButton>
             <PlayPauseButton
               isPlaying={isPlaying}
               onClick={() => setIsPlaying(p => !p)}
               disabled={!selectedFile || fileLoading || !!fileError}
               buttonRef={playPauseBtnRef}
             />
+            <IconButton
+              onClick={handleNext}
+              disabled={!hasNext || fileLoading || !!fileError}
+              ariaLabel="Next"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <polygon points="8,5 16,12 8,19" fill="currentColor" />
+              </svg>
+            </IconButton>
             <button
               type="button"
               className="px-2 py-1 rounded bg-zinc-700 text-white ml-2 hover:bg-zinc-600"
