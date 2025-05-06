@@ -69,6 +69,7 @@ function getLanguageFromFilename(filename: string): Language | undefined {
   if (filename.endsWith(".cpp")) return "cpp";
   if (filename.endsWith(".xml")) return "markup";
   if (filename.endsWith(".yml") || filename.endsWith(".yaml")) return "yaml";
+  if (filename.endsWith(".go")) return "go";
   return undefined;
 }
 
