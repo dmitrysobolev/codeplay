@@ -3,8 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import { Highlight, themes } from "prism-react-renderer";
 import ThemeSelector from "./ThemeSelector";
 
-const GITHUB_TOKEN = "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";
-
 function parseRepoUrl(input: string): { owner: string, repo: string } | null {
   const urlPattern = /github\.com\/(.+?)\/(.+?)(?:\.git|\/|$)/i;
   const shortPattern = /^([\w-]+)\/([\w.-]+)$/;
@@ -244,6 +242,13 @@ export default function Home() {
     { name: "VS Dark", value: "vsDark" },
   ];
   const [selectedTheme, setSelectedTheme] = useState("dracula");
+  const [showSettings, setShowSettings] = useState(false);
+  const [githubToken, setGithubToken] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('githubToken') || "";
+    }
+    return "";
+  });
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -296,7 +301,7 @@ export default function Home() {
       } else if (!finished) {
         finished = true;
         setIsPlaying(false);
-        if (el.scrollHeight <= el.clientHeight + 2) { // allow for rounding
+        if (el.scrollHeight <= el.clientHeight + 2) { // file fits on one screen
           setTimeout(() => {
             if (files && selectedFile) {
               const orderedFiles = flattenFileTree(buildFileTree(files));
@@ -344,13 +349,13 @@ export default function Home() {
     }
     const nextPath = orderedFiles[idx + 1];
     let cancelled = false;
-    fetchFileContent(repoInfo.owner, repoInfo.repo, nextPath, branchUsed, GITHUB_TOKEN).then(content => {
+    fetchFileContent(repoInfo.owner, repoInfo.repo, nextPath, branchUsed, githubToken).then(content => {
       if (!cancelled && content !== null) {
         setNextFileCache({ path: nextPath, content });
       }
     });
     return () => { cancelled = true; };
-  }, [files, selectedFile, repoInfo, branchUsed]);
+  }, [files, selectedFile, repoInfo, branchUsed, githubToken]);
 
   // Play/Pause with Space shortcut
   useEffect(() => {
@@ -382,10 +387,10 @@ export default function Home() {
     setRepoInfo(info);
     setLoading(true);
     // Try master, then main
-    let fileList = await fetchFiles(info.owner, info.repo, "master", GITHUB_TOKEN);
+    let fileList = await fetchFiles(info.owner, info.repo, "master", githubToken);
     let branch = "master";
     if (!fileList) {
-      fileList = await fetchFiles(info.owner, info.repo, "main", GITHUB_TOKEN);
+      fileList = await fetchFiles(info.owner, info.repo, "main", githubToken);
       branch = "main";
     }
     setLoading(false);
@@ -420,7 +425,7 @@ export default function Home() {
       setFileLoading(false);
       return;
     }
-    const content = await fetchFileContent(repoInfo.owner, repoInfo.repo, file, branchUsed, GITHUB_TOKEN);
+    const content = await fetchFileContent(repoInfo.owner, repoInfo.repo, file, branchUsed, githubToken);
     setFileLoading(false);
     if (content === null) {
       setFileError("Could not fetch file content.");
@@ -444,6 +449,13 @@ export default function Home() {
     document.addEventListener('fullscreenchange', onFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
+
+  // Save token to localStorage when changed
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('githubToken', githubToken);
+    }
+  }, [githubToken]);
 
   return (
     <div className="flex flex-col min-h-screen bg-black">
@@ -590,6 +602,43 @@ export default function Home() {
               onChange={setSelectedTheme}
               options={prismThemes}
             />
+            <button
+              type="button"
+              className="px-2 py-1 rounded bg-zinc-700 text-white ml-2 hover:bg-zinc-600"
+              title="Settings"
+              onClick={() => setShowSettings(true)}
+            >
+              ⚙️
+            </button>
+            {showSettings && (
+              <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+                <div className="bg-zinc-800 p-6 rounded shadow-lg min-w-[320px] relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-400 hover:text-white"
+                    onClick={() => setShowSettings(false)}
+                    aria-label="Close settings"
+                  >
+                    ×
+                  </button>
+                  <h3 className="text-lg font-semibold mb-4 text-white">Settings</h3>
+                  <label className="block text-gray-300 mb-2">GitHub Personal Token</label>
+                  <input
+                    type="text"
+                    className="w-full border border-zinc-600 rounded px-3 py-2 bg-zinc-900 text-white mb-4"
+                    value={githubToken}
+                    onChange={e => setGithubToken(e.target.value)}
+                    placeholder="Enter your GitHub token"
+                  />
+                  <div className="text-xs text-gray-400 mb-2">Token is stored in your browser only.</div>
+                  <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    onClick={() => setShowSettings(false)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
