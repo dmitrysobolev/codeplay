@@ -210,14 +210,18 @@ export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   // Prism theme selection using only themes from the imported 'themes' object
   const prismThemes = [
-    { name: "Shades of Purple", value: "shadesOfPurple" },
-    { name: "Duotone Dark", value: "duotoneDark" },
-    { name: "Night Owl", value: "nightOwl" },
     { name: "Dracula", value: "dracula" },
+    { name: "Duotone Dark", value: "duotoneDark" },
+    { name: "Gruvbox Material Dark", value: "gruvboxMaterialDark" },
+    { name: "Jettwave Dark", value: "jettwaveDark" },
+    { name: "Night Owl", value: "nightOwl" },
+    { name: "Oceanic Next", value: "oceanicNext" },
     { name: "Okaidia", value: "okaidia" },
-    { name: "VS Dark", value: "vsDark" },
+    { name: "One Dark", value: "oneDark" },
     { name: "Palenight", value: "palenight" },
-    { name: "A11y Dark", value: "a11yDark" },
+    { name: "Shades of Purple", value: "shadesOfPurple" },
+    { name: "Synthwave 84", value: "synthwave84" },
+    { name: "VS Dark", value: "vsDark" },
   ];
   const [selectedTheme, setSelectedTheme] = useState("dracula");
 
