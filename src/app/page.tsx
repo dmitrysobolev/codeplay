@@ -190,6 +190,8 @@ export default function Home() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [nextFileForTransition, setNextFileForTransition] = useState<string | null>(null);
   const transitionContainerRef = useRef<HTMLDivElement | null>(null);
+  // Add state to track which file is being loaded
+  const [loadingFilePath, setLoadingFilePath] = useState<string | null>(null);
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -246,13 +248,22 @@ export default function Home() {
               const orderedFiles = flattenFileTree(buildFileTree(files));
               const idx = orderedFiles.indexOf(selectedFile);
               if (idx !== -1 && idx + 1 < orderedFiles.length) {
-                setNextFileForTransition(orderedFiles[idx + 1]);
-                setIsTransitioning(true);
-                setTimeout(() => {
-                  handleSelectFile(orderedFiles[idx + 1], true, true);
-                  setIsTransitioning(false);
-                  setNextFileForTransition(null);
-                }, 1000); // 1s transition
+                const nextPath = orderedFiles[idx + 1];
+                // Wait for nextFileCache to be ready
+                if (nextFileCache && nextFileCache.path === nextPath) {
+                  setNextFileForTransition(nextPath);
+                  setIsTransitioning(true);
+                  setTimeout(() => {
+                    setIsTransitioning(false);
+                    setNextFileForTransition(null);
+                    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+                    setSelectedFile(nextPath);
+                    setFileContent(nextFileCache.content);
+                  }, 1000); // 1s transition
+                } else {
+                  // Wait and retry
+                  setTimeout(moveNext, 100);
+                }
               } else {
                 setIsPlaying(false);
               }
@@ -273,13 +284,22 @@ export default function Home() {
             const orderedFiles = flattenFileTree(buildFileTree(files));
             const idx = orderedFiles.indexOf(selectedFile);
             if (idx !== -1 && idx + 1 < orderedFiles.length) {
-              setNextFileForTransition(orderedFiles[idx + 1]);
-              setIsTransitioning(true);
-              setTimeout(() => {
-                handleSelectFile(orderedFiles[idx + 1], true, true);
-                setIsTransitioning(false);
-                setNextFileForTransition(null);
-              }, 1000); // 1s transition
+              const nextPath = orderedFiles[idx + 1];
+              // Wait for nextFileCache to be ready
+              if (nextFileCache && nextFileCache.path === nextPath) {
+                setNextFileForTransition(nextPath);
+                setIsTransitioning(true);
+                setTimeout(() => {
+                  setIsTransitioning(false);
+                  setNextFileForTransition(null);
+                  if (scrollRef.current) scrollRef.current.scrollTop = 0;
+                  setSelectedFile(nextPath);
+                  setFileContent(nextFileCache.content);
+                }, 1000); // 1s transition
+              } else {
+                // Wait and retry
+                setTimeout(moveNext, 100);
+              }
             } else {
               setIsPlaying(false);
             }
@@ -294,7 +314,7 @@ export default function Home() {
     return () => {
       if (scrollInterval.current) clearInterval(scrollInterval.current);
     };
-  }, [isPlaying, fileContent, files, selectedFile]);
+  }, [isPlaying, fileContent, files, selectedFile, nextFileCache]);
 
   // Reset scroll on new file
   useEffect(() => {
@@ -382,31 +402,37 @@ export default function Home() {
     }
   }, [files, repoInfo, branchUsed, selectedFile]);
 
-  // If useCache is true and the next file is cached, use it
-  const handleSelectFile = async (file: string, autoPlay = false, useCache = false) => {
+  // Update handleSelectFile to use loadingFilePath and only update fileContent after loading
+  const handleSelectFile = async (file: string, autoPlay = false, useCache = false, isTransition = false) => {
     if (!repoInfo || !branchUsed) return;
     if (!githubToken || githubToken.trim() === "") {
       setFileError("GitHub personal token is required. Please set it in settings (⚙️) below.");
       setIsPlaying(false);
       return;
     }
-    setSelectedFile(file);
-    setFileContent(null);
+    if (isTransition) {
+      setLoadingFilePath(file);
+      return;
+    }
     setFileError(null);
     setFileLoading(true);
     setIsPlaying(autoPlay);
     if (useCache && nextFileCache && nextFileCache.path === file) {
+      setSelectedFile(file);
       setFileContent(nextFileCache.content);
       setFileLoading(false);
+      setLoadingFilePath(null);
       return;
     }
     const content = await fetchFileContent(repoInfo.owner, repoInfo.repo, file, branchUsed, githubToken);
     setFileLoading(false);
+    setLoadingFilePath(null);
     if (content === null) {
       setFileError("Could not fetch file content.");
       setIsPlaying(false);
       return;
     }
+    setSelectedFile(file);
     setFileContent(content);
   };
 
