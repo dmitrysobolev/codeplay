@@ -6,6 +6,7 @@ import PlayPauseButton from "./PlayPauseButton";
 import PrevButton from "./PrevButton";
 import NextButton from "./NextButton";
 import FileTree, { FileNode } from "./FileTree";
+import PlaybackSpeedSelector from "./PlaybackSpeedSelector";
 
 function parseRepoUrl(input: string): { owner: string, repo: string } | null {
   const urlPattern = /github\.com\/(.+?)\/(.+?)(?:\.git|\/|$)/i;
@@ -758,19 +759,11 @@ export default function Home() {
               onChange={setSelectedTheme}
               options={prismThemes}
             />
-            <div className="ml-2 flex items-center">
-              <label htmlFor="playback-speed" className="text-gray-400 text-xs mr-1">Speed</label>
-              <select
-                id="playback-speed"
-                className="bg-zinc-700 text-white rounded px-2 py-1 text-xs focus:outline-none"
-                value={playbackSpeed}
-                onChange={e => setPlaybackSpeed(Number(e.target.value))}
-              >
-                {playbackSpeedOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt}x</option>
-                ))}
-              </select>
-            </div>
+            <PlaybackSpeedSelector
+              value={playbackSpeed}
+              onChange={setPlaybackSpeed}
+              options={playbackSpeedOptions}
+            />
             <button
               type="button"
               className="px-2 py-1 rounded bg-zinc-700 text-white ml-2 hover:bg-zinc-600"
