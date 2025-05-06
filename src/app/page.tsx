@@ -28,11 +28,15 @@ async function fetchFiles(owner: string, repo: string, branch: string, token: st
   });
   if (!res.ok) return null;
   const data = await res.json();
-  const textExts = [
-    ".txt", ".md", ".py", ".js", ".json", ".csv", ".html", ".css", ".ts", ".java", ".c", ".cpp", ".xml", ".yml", ".yaml", ".ini", ".cfg", ".log"
+  // Blacklist of common binary file extensions
+  const binaryExts = [
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".pdf", ".exe", ".dll", ".so", ".dylib", ".zip", ".tar", ".gz", ".rar", ".7z", ".mp3", ".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv", ".webm", ".ogg", ".wav", ".class", ".jar", ".bin", ".obj", ".o", ".a", ".lib", ".ttf", ".woff", ".woff2", ".eot", ".psd", ".ai", ".sketch", ".xcf", ".svgz", ".apk", ".ipa", ".pdb", ".ds_store"
   ];
   return (data.tree || [])
-    .filter((item: TreeItem) => item.type === "blob" && textExts.some(ext => item.path.endsWith(ext)))
+    .filter((item: TreeItem) =>
+      item.type === "blob" &&
+      !binaryExts.some(ext => item.path.toLowerCase().endsWith(ext))
+    )
     .map((item: TreeItem) => item.path);
 }
 
