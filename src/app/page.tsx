@@ -672,7 +672,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-            {fileLoading && selectedFile && <div className="text-gray-300">Loading file...</div>}
             {fileError && selectedFile && <div className="text-red-400">{fileError}</div>}
             {!selectedFile && <div className="italic text-gray-500">No file selected. Select a file to start playing.</div>}
           </div>
