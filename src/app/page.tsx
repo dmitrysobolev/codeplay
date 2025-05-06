@@ -288,20 +288,33 @@ export default function Home() {
     if (!el) return;
     const scrollStep = 1; // px per tick
     const scrollDelay = 20; // ms per tick
+    let finished = false;
     function scrollDown() {
       if (!el) return;
       if (el.scrollTop + el.clientHeight < el.scrollHeight) {
         el.scrollTop += scrollStep;
-      } else {
-        // End of file, go to next file if available
+      } else if (!finished) {
+        finished = true;
         setIsPlaying(false);
-        if (files && selectedFile) {
-          const orderedFiles = flattenFileTree(buildFileTree(files));
-          const idx = orderedFiles.indexOf(selectedFile);
-          if (idx !== -1 && idx + 1 < orderedFiles.length) {
-            setTimeout(() => {
-              handleSelectFile(orderedFiles[idx + 1], true, true);
-            }, 500);
+        if (el.scrollHeight <= el.clientHeight + 2) { // allow for rounding
+          setTimeout(() => {
+            if (files && selectedFile) {
+              const orderedFiles = flattenFileTree(buildFileTree(files));
+              const idx = orderedFiles.indexOf(selectedFile);
+              if (idx !== -1 && idx + 1 < orderedFiles.length) {
+                handleSelectFile(orderedFiles[idx + 1], true, true);
+              }
+            }
+          }, 1000);
+        } else {
+          if (files && selectedFile) {
+            const orderedFiles = flattenFileTree(buildFileTree(files));
+            const idx = orderedFiles.indexOf(selectedFile);
+            if (idx !== -1 && idx + 1 < orderedFiles.length) {
+              setTimeout(() => {
+                handleSelectFile(orderedFiles[idx + 1], true, true);
+              }, 500);
+            }
           }
         }
       }
@@ -310,7 +323,6 @@ export default function Home() {
     return () => {
       if (scrollInterval.current) clearInterval(scrollInterval.current);
     };
-    // Only depend on isPlaying, fileContent, files, selectedFile
   }, [isPlaying, fileContent, files, selectedFile]);
 
   // Reset scroll on new file
