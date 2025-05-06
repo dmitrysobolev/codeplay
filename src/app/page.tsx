@@ -401,7 +401,7 @@ export default function Home() {
     const speed = 0.4; // px per frame (slower)
     const delay = 1000; // ms to pause at each end
 
-    // Initially scroll to the far right (show file name)
+    // Only set scrollLeft and direction on file change
     el.scrollLeft = el.scrollWidth - el.clientWidth;
     scrollDirRef.current = 'left';
 
