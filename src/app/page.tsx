@@ -440,7 +440,7 @@ export default function Home() {
             {error && <div className="text-red-400 mt-2">{error}</div>}
           </div>
           <div className="flex-1 overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-2 text-white">Text Files</h2>
+            <h2 className="text-xl font-semibold mb-2 text-white">Files</h2>
             {files ? (
               <FileTree
                 nodes={buildFileTree(files)}
