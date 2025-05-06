@@ -192,6 +192,9 @@ export default function Home() {
   const transitionContainerRef = useRef<HTMLDivElement | null>(null);
   // Add state to track which file is being loaded
   const [loadingFilePath, setLoadingFilePath] = useState<string | null>(null);
+  // Add playback speed state
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const playbackSpeedOptions = [0.5, 1, 1.5, 2];
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -235,7 +238,8 @@ export default function Home() {
     const el = scrollRef.current;
     if (!el) return;
     const scrollStep = 1; // px per tick
-    const scrollDelay = 20; // ms per tick
+    const baseDelay = 20; // ms per tick at 1x
+    const scrollDelay = baseDelay / playbackSpeed;
     let finished = false;
     function scrollDown() {
       if (!el) return;
@@ -314,7 +318,7 @@ export default function Home() {
     return () => {
       if (scrollInterval.current) clearInterval(scrollInterval.current);
     };
-  }, [isPlaying, fileContent, files, selectedFile, nextFileCache]);
+  }, [isPlaying, fileContent, files, selectedFile, nextFileCache, playbackSpeed]);
 
   // Reset scroll on new file
   useEffect(() => {
@@ -754,6 +758,19 @@ export default function Home() {
               onChange={setSelectedTheme}
               options={prismThemes}
             />
+            <div className="ml-2 flex items-center">
+              <label htmlFor="playback-speed" className="text-gray-400 text-xs mr-1">Speed</label>
+              <select
+                id="playback-speed"
+                className="bg-zinc-700 text-white rounded px-2 py-1 text-xs focus:outline-none"
+                value={playbackSpeed}
+                onChange={e => setPlaybackSpeed(Number(e.target.value))}
+              >
+                {playbackSpeedOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt}x</option>
+                ))}
+              </select>
+            </div>
             <button
               type="button"
               className="px-2 py-1 rounded bg-zinc-700 text-white ml-2 hover:bg-zinc-600"
