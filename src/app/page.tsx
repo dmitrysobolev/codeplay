@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { Highlight, themes } from "prism-react-renderer";
+import ThemeSelector from "./ThemeSelector";
 
 const GITHUB_TOKEN = "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";
 
@@ -210,10 +211,13 @@ export default function Home() {
   // Prism theme selection using only themes from the imported 'themes' object
   const prismThemes = [
     { name: "Shades of Purple", value: "shadesOfPurple" },
-    { name: "Duotone Light", value: "duotoneLight" },
     { name: "Duotone Dark", value: "duotoneDark" },
     { name: "Night Owl", value: "nightOwl" },
     { name: "Dracula", value: "dracula" },
+    { name: "Okaidia", value: "okaidia" },
+    { name: "VS Dark", value: "vsDark" },
+    { name: "Palenight", value: "palenight" },
+    { name: "A11y Dark", value: "a11yDark" },
   ];
   const [selectedTheme, setSelectedTheme] = useState("dracula");
 
@@ -484,17 +488,11 @@ export default function Home() {
             >
               {isFullscreen ? "⤫" : "⛶"}
             </button>
-            <select
-              className="bg-zinc-800 text-white rounded px-2 py-1 ml-2"
+            <ThemeSelector
               value={selectedTheme}
-              onChange={e => setSelectedTheme(e.target.value)}
-              style={{ minWidth: 120 }}
-              title="Change code color theme"
-            >
-              {prismThemes.map(t => (
-                <option key={t.value} value={t.value}>{t.name}</option>
-              ))}
-            </select>
+              onChange={setSelectedTheme}
+              options={prismThemes}
+            />
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             {fileLoading && selectedFile && <div className="text-gray-300">Loading file...</div>}
