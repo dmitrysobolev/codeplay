@@ -141,35 +141,41 @@ function FileTree({ nodes, selectedFile, onSelect }: {
 
   return (
     <ul className="pl-4">
-      {nodes.map(node => (
-        <li key={node.path} className="break-all">
-          {node.type === "folder" ? (
-            <div>
+      {nodes
+        .slice()
+        .sort((a, b) => {
+          if (a.type === b.type) return a.name.localeCompare(b.name);
+          return a.type === 'folder' ? -1 : 1;
+        })
+        .map(node => (
+          <li key={node.path} className="break-all">
+            {node.type === "folder" ? (
+              <div>
+                <button
+                  type="button"
+                  className="text-blue-200 font-bold bg-transparent border-none cursor-pointer mr-1"
+                  onClick={() => toggleFolder(node.path)}
+                  aria-label={openFolders[node.path] ? "Collapse folder" : "Expand folder"}
+                >
+                  {openFolders[node.path] ? "▼" : "▶"}
+                </button>
+                <span className="text-blue-200 font-bold">{node.name}</span>
+                {openFolders[node.path] && node.children && (
+                  <FileTree nodes={node.children as FileNode[]} selectedFile={selectedFile} onSelect={onSelect} />
+                )}
+              </div>
+            ) : (
               <button
                 type="button"
-                className="text-yellow-400 font-bold bg-transparent border-none cursor-pointer mr-1"
-                onClick={() => toggleFolder(node.path)}
-                aria-label={openFolders[node.path] ? "Collapse folder" : "Expand folder"}
+                className={`text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "font-bold text-blue-200" : ""}`}
+                onClick={() => onSelect(node.path)}
+                aria-pressed={selectedFile === node.path}
               >
-                {openFolders[node.path] ? "▼" : "▶"}
+                {node.name}
               </button>
-              <span className="text-yellow-300">{node.name}</span>
-              {openFolders[node.path] && node.children && (
-                <FileTree nodes={node.children as FileNode[]} selectedFile={selectedFile} onSelect={onSelect} />
-              )}
-            </div>
-          ) : (
-            <button
-              type="button"
-              className={`text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "font-bold text-blue-200" : ""}`}
-              onClick={() => onSelect(node.path)}
-              aria-pressed={selectedFile === node.path}
-            >
-              {node.name}
-            </button>
-          )}
-        </li>
-      ))}
+            )}
+          </li>
+        ))}
     </ul>
   );
 }
