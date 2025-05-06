@@ -175,7 +175,7 @@ export default function Home() {
     return "";
   });
   const filePathContainerRef = useRef<HTMLSpanElement | null>(null);
-  const [scrollDir, setScrollDir] = useState<"right" | "left">("right");
+  const scrollDirRef = useRef<'left' | 'right'>('left');
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -398,24 +398,23 @@ export default function Home() {
     const el = filePathContainerRef.current;
     if (!el || !selectedFile) return;
     let animId: number | null = null;
-    let dir: "right" | "left" = "left"; // Start by moving left
     const speed = 0.4; // px per frame (slower)
     const delay = 1000; // ms to pause at each end
 
     // Initially scroll to the far right (show file name)
     el.scrollLeft = el.scrollWidth - el.clientWidth;
+    scrollDirRef.current = 'left';
 
     function animate() {
       if (!el) return;
       if (el.scrollWidth <= el.clientWidth) return;
-      if (dir === "left") {
+      if (scrollDirRef.current === 'left') {
         if (el.scrollLeft > 0) {
           el.scrollLeft -= speed;
           animId = requestAnimationFrame(animate);
         } else {
           setTimeout(() => {
-            dir = "right";
-            setScrollDir("right");
+            scrollDirRef.current = 'right';
             animId = requestAnimationFrame(animate);
           }, delay);
         }
@@ -425,8 +424,7 @@ export default function Home() {
           animId = requestAnimationFrame(animate);
         } else {
           setTimeout(() => {
-            dir = "left";
-            setScrollDir("left");
+            scrollDirRef.current = 'left';
             animId = requestAnimationFrame(animate);
           }, delay);
         }
@@ -436,8 +434,7 @@ export default function Home() {
     return () => {
       if (animId) cancelAnimationFrame(animId);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedFile, scrollDir]);
+  }, [selectedFile]);
 
   const orderedFiles = files ? flattenFileTree(buildFileTree(files)) : [];
   const currentIndex = selectedFile ? orderedFiles.indexOf(selectedFile) : -1;
