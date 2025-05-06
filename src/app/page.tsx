@@ -394,7 +394,7 @@ export default function Home() {
               <FileTree
                 nodes={buildFileTree(files)}
                 selectedFile={selectedFile}
-                onSelect={file => handleSelectFile(file)}
+                onSelect={file => handleSelectFile(file, true)}
               />
             ) : (
               <div className="italic text-gray-400">No files loaded.</div>
