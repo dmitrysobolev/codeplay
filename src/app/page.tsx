@@ -202,6 +202,8 @@ export default function Home() {
   const dragging = useRef(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
+  // Ref for Play/Pause button
+  const playPauseBtnRef = useRef<HTMLButtonElement | null>(null);
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -295,6 +297,20 @@ export default function Home() {
     });
     return () => { cancelled = true; };
   }, [files, selectedFile, repoInfo, branchUsed]);
+
+  // Play/Pause with Space shortcut
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.code === 'Space' && selectedFile && !fileLoading && !fileError) {
+        e.preventDefault();
+        setIsPlaying(p => !p);
+        // Focus the Play/Pause button
+        playPauseBtnRef.current?.focus();
+      }
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedFile, fileLoading, fileError]);
 
   const handleFetchFiles = async () => {
     setError(null);
@@ -419,6 +435,7 @@ export default function Home() {
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
             </span>
             <button
+              ref={playPauseBtnRef}
               type="button"
               className={`px-3 py-1 rounded ${isPlaying ? "bg-red-500" : "bg-green-600"} text-white`}
               onClick={() => setIsPlaying(p => !p)}
