@@ -204,6 +204,9 @@ export default function Home() {
   const startWidth = useRef(0);
   // Ref for Play/Pause button
   const playPauseBtnRef = useRef<HTMLButtonElement | null>(null);
+  // Fullscreen code view
+  const codeViewRef = useRef<HTMLDivElement | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -380,6 +383,14 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    function onFullscreenChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-black">
       <div className="flex flex-1 w-screen h-screen gap-0" style={{ minHeight: '100vh' }}>
@@ -432,7 +443,11 @@ export default function Home() {
           }}
         />
         {/* Right pane: 5/6 width */}
-        <div className="flex-1 border-l border-zinc-700 bg-zinc-900 p-4 flex flex-col h-screen min-h-0 overflow-x-hidden">
+        <div
+          ref={codeViewRef}
+          className="flex-1 border-l border-zinc-700 bg-zinc-900 p-4 flex flex-col h-screen min-h-0 overflow-x-hidden"
+          style={isFullscreen ? { zIndex: 50, position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', border: 'none', borderRadius: 0 } : {}}
+        >
           <div className="flex items-center gap-4 mb-2">
             <span className="font-mono text-sm text-gray-300 flex-1">
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
@@ -445,6 +460,20 @@ export default function Home() {
               disabled={!selectedFile || fileLoading || !!fileError}
             >
               {isPlaying ? "Pause" : "Play"}
+            </button>
+            <button
+              type="button"
+              className="px-2 py-1 rounded bg-zinc-700 text-white ml-2 hover:bg-zinc-600"
+              title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+              onClick={async () => {
+                if (!isFullscreen && codeViewRef.current) {
+                  await codeViewRef.current.requestFullscreen();
+                } else if (isFullscreen && document.fullscreenElement) {
+                  await document.exitFullscreen();
+                }
+              }}
+            >
+              {isFullscreen ? "⤫" : "⛶"}
             </button>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
