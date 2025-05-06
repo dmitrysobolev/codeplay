@@ -112,6 +112,22 @@ type FileNode = {
   children?: FileNode[] | { [key: string]: FileNode };
 };
 
+// Flattens a FileNode tree into a list of file paths in depth-first, folders-before-files order
+function flattenFileTree(nodes: FileNode[]): string[] {
+  let result: string[] = [];
+  for (const node of nodes.sort((a, b) => {
+    if (a.type === b.type) return a.name.localeCompare(b.name);
+    return a.type === 'folder' ? -1 : 1;
+  })) {
+    if (node.type === "file") {
+      result.push(node.path);
+    } else if (node.type === "folder" && Array.isArray(node.children)) {
+      result = result.concat(flattenFileTree(node.children));
+    }
+  }
+  return result;
+}
+
 // Recursive tree view component
 function FileTree({ nodes, selectedFile, onSelect }: {
   nodes: FileNode[];
@@ -280,10 +296,11 @@ export default function Home() {
         // End of file, go to next file if available
         setIsPlaying(false);
         if (files && selectedFile) {
-          const idx = files.indexOf(selectedFile);
-          if (idx !== -1 && idx + 1 < files.length) {
+          const orderedFiles = flattenFileTree(buildFileTree(files));
+          const idx = orderedFiles.indexOf(selectedFile);
+          if (idx !== -1 && idx + 1 < orderedFiles.length) {
             setTimeout(() => {
-              handleSelectFile(files[idx + 1], true, true);
+              handleSelectFile(orderedFiles[idx + 1], true, true);
             }, 500);
           }
         }
@@ -307,12 +324,13 @@ export default function Home() {
       setNextFileCache(null);
       return;
     }
-    const idx = files.indexOf(selectedFile);
-    if (idx === -1 || idx + 1 >= files.length) {
+    const orderedFiles = flattenFileTree(buildFileTree(files));
+    const idx = orderedFiles.indexOf(selectedFile);
+    if (idx === -1 || idx + 1 >= orderedFiles.length) {
       setNextFileCache(null);
       return;
     }
-    const nextPath = files[idx + 1];
+    const nextPath = orderedFiles[idx + 1];
     let cancelled = false;
     fetchFileContent(repoInfo.owner, repoInfo.repo, nextPath, branchUsed, GITHUB_TOKEN).then(content => {
       if (!cancelled && content !== null) {
@@ -370,7 +388,10 @@ export default function Home() {
   // Auto-select and play the first file when files, repoInfo, and branchUsed are set
   useEffect(() => {
     if (files && files.length > 0 && repoInfo && branchUsed && !selectedFile) {
-      handleSelectFile(files[0], true);
+      const orderedFiles = flattenFileTree(buildFileTree(files));
+      if (orderedFiles.length > 0) {
+        handleSelectFile(orderedFiles[0], true);
+      }
     }
   }, [files, repoInfo, branchUsed, selectedFile]);
 
