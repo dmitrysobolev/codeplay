@@ -1,22 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GitHub File Browser & Code Viewer
+
+A modern, accessible, and beautiful file/code browser for GitHub repositories, built with [Next.js](https://nextjs.org) and React.
+
+## What is this?
+
+This project lets you explore and read the code of any public or private GitHub repository in a fast, user-friendly interface. It features:
+
+- **Hierarchical file tree**: Browse folders and files just like on GitHub, with folders-first sorting and expand/collapse.
+- **Code viewer**: View code with syntax highlighting (powered by Prism), line numbers, and a responsive layout.
+- **Theme selection**: Choose from a curated set of dark Prism themes for your code view.
+- **Keyboard accessibility**: Navigate the file tree and control playback with your keyboard.
+- **Auto-scroll & playback**: Auto-scrolls through code files, with Play/Pause and auto-advance to the next file. Short files are shown for 1 second before advancing.
+- **GitHub token support**: Add your personal GitHub token in Settings (⚙️) for private repos or higher rate limits. Token is stored only in your browser.
+- **Resizable panes & fullscreen**: Adjust the file tree width and view code in fullscreen mode.
 
 ## Getting Started
 
-First, run the development server:
+1. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+2. **Run the development server:**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+3. **Open your browser:**
+   Go to [http://localhost:3000](http://localhost:3000)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Usage
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Enter a GitHub repo URL (e.g. `https://github.com/owner/repo` or `owner/repo`) and click **Go!**
+- Browse the file tree and click files to view their code.
+- Use the bottom panel to Play/Pause auto-scroll, change theme, go fullscreen, or open Settings (⚙️) to set your GitHub personal token.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
+
+Enjoy exploring code with a modern, accessible UI!
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
