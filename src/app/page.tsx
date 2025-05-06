@@ -370,12 +370,11 @@ export default function Home() {
           style={{ width: leftWidth, height: '100vh', maxHeight: '100vh', minWidth: minLeftWidth, maxWidth: maxLeftWidth }}
         >
           <div className="flex flex-col gap-2 mb-4">
-            <label htmlFor="repo" className="font-semibold text-white">GitHub Repo URL</label>
             <input
               id="repo"
               type="text"
               className="border rounded px-3 py-2 text-lg bg-zinc-900 text-white placeholder-gray-400 border-zinc-700"
-              placeholder="https://github.com/tinygrad/tinygrad or tinygrad/tinygrad"
+              placeholder="GitHub Repo URL"
               value={repoInput}
               onChange={e => setRepoInput(e.target.value)}
             />
@@ -385,7 +384,7 @@ export default function Home() {
               onClick={handleFetchFiles}
               disabled={loading || !repoInput.trim()}
             >
-              {loading ? "Loading..." : "Fetch Files"}
+              {loading ? "Loading..." : "Go!"}
             </button>
             {error && <div className="text-red-400 mt-2">{error}</div>}
           </div>
