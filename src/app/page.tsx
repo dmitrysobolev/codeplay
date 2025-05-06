@@ -3,6 +3,8 @@ import { useState, useRef, useEffect } from "react";
 import { Highlight, themes } from "prism-react-renderer";
 import ThemeSelector from "./ThemeSelector";
 import PlayPauseButton from "./PlayPauseButton";
+import PrevButton from "./PrevButton";
+import NextButton from "./NextButton";
 
 function parseRepoUrl(input: string): { owner: string, repo: string } | null {
   const urlPattern = /github\.com\/(.+?)\/(.+?)(?:\.git|\/|$)/i;
@@ -198,20 +200,6 @@ function FileTree({ nodes, selectedFile, onSelect }: {
           </li>
         ))}
     </ul>
-  );
-}
-
-function IconButton({ onClick, disabled, ariaLabel, children }: { onClick: () => void; disabled?: boolean; ariaLabel: string; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      className="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-zinc-700 hover:bg-zinc-600 text-white"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={ariaLabel}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -614,30 +602,20 @@ export default function Home() {
             <span className="font-mono text-sm text-gray-300 flex-1">
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
             </span>
-            <IconButton
+            <PrevButton
               onClick={handlePrev}
               disabled={!hasPrev || fileLoading || !!fileError}
-              ariaLabel="Previous"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <polygon points="16,5 8,12 16,19" fill="currentColor" />
-              </svg>
-            </IconButton>
+            />
             <PlayPauseButton
               isPlaying={isPlaying}
               onClick={() => setIsPlaying(p => !p)}
               disabled={!selectedFile || fileLoading || !!fileError}
               buttonRef={playPauseBtnRef}
             />
-            <IconButton
+            <NextButton
               onClick={handleNext}
               disabled={!hasNext || fileLoading || !!fileError}
-              ariaLabel="Next"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <polygon points="8,5 16,12 8,19" fill="currentColor" />
-              </svg>
-            </IconButton>
+            />
             <button
               type="button"
               className="px-2 py-1 rounded bg-zinc-700 text-white ml-2 hover:bg-zinc-600"
