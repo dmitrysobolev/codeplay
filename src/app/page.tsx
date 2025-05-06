@@ -207,6 +207,15 @@ export default function Home() {
   // Fullscreen code view
   const codeViewRef = useRef<HTMLDivElement | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Prism theme selection using only themes from the imported 'themes' object
+  const prismThemes = [
+    { name: "Shades of Purple", value: "shadesOfPurple" },
+    { name: "Duotone Light", value: "duotoneLight" },
+    { name: "Duotone Dark", value: "duotoneDark" },
+    { name: "Night Owl", value: "nightOwl" },
+    { name: "Dracula", value: "dracula" },
+  ];
+  const [selectedTheme, setSelectedTheme] = useState("dracula");
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -475,6 +484,17 @@ export default function Home() {
             >
               {isFullscreen ? "⤫" : "⛶"}
             </button>
+            <select
+              className="bg-zinc-800 text-white rounded px-2 py-1 ml-2"
+              value={selectedTheme}
+              onChange={e => setSelectedTheme(e.target.value)}
+              style={{ minWidth: 120 }}
+              title="Change code color theme"
+            >
+              {prismThemes.map(t => (
+                <option key={t.value} value={t.value}>{t.name}</option>
+              ))}
+            </select>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             {fileLoading && selectedFile && <div className="text-gray-300">Loading file...</div>}
@@ -483,7 +503,7 @@ export default function Home() {
               <Highlight
                 code={fileContent}
                 language={getLanguageFromFilename(selectedFile) || "text"}
-                theme={themes.shadesOfPurple}
+                theme={themes[selectedTheme]}
               >
                 {({ className, style, tokens, getLineProps, getTokenProps }: {
                   className: string;
