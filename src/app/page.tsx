@@ -549,7 +549,7 @@ export default function Home() {
               onClick={handleFetchFiles}
               disabled={loading || !repoInput.trim()}
             >
-              {loading ? "Loading..." : "Go!"}
+              {loading ? "Loading..." : "Sync"}
             </button>
             {error && <div className="text-red-400 mt-2">{error}</div>}
           </div>
