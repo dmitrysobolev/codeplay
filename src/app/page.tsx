@@ -186,6 +186,10 @@ export default function Home() {
   });
   const filePathContainerRef = useRef<HTMLSpanElement | null>(null);
   const scrollDirRef = useRef<'left' | 'right'>('left');
+  // Add state for vertical transition
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [nextFileForTransition, setNextFileForTransition] = useState<string | null>(null);
+  const transitionContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -233,6 +237,7 @@ export default function Home() {
     let finished = false;
     function scrollDown() {
       if (!el) return;
+      // If file is empty or fits on one screen, wait 1s and move next
       if (fileContent === '' || el.scrollHeight <= el.clientHeight + 2) {
         if (!finished) {
           finished = true;
@@ -241,7 +246,13 @@ export default function Home() {
               const orderedFiles = flattenFileTree(buildFileTree(files));
               const idx = orderedFiles.indexOf(selectedFile);
               if (idx !== -1 && idx + 1 < orderedFiles.length) {
-                handleSelectFile(orderedFiles[idx + 1], true, true);
+                setNextFileForTransition(orderedFiles[idx + 1]);
+                setIsTransitioning(true);
+                setTimeout(() => {
+                  handleSelectFile(orderedFiles[idx + 1], true, true);
+                  setIsTransitioning(false);
+                  setNextFileForTransition(null);
+                }, 1000); // 1s transition
               } else {
                 setIsPlaying(false);
               }
@@ -257,16 +268,26 @@ export default function Home() {
         el.scrollTop += scrollStep;
       } else if (!finished) {
         finished = true;
-        setIsPlaying(false);
-        if (files && selectedFile) {
-          const orderedFiles = flattenFileTree(buildFileTree(files));
-          const idx = orderedFiles.indexOf(selectedFile);
-          if (idx !== -1 && idx + 1 < orderedFiles.length) {
-            setTimeout(() => {
-              handleSelectFile(orderedFiles[idx + 1], true, true);
-            }, 500);
+        const moveNext = () => {
+          if (files && selectedFile) {
+            const orderedFiles = flattenFileTree(buildFileTree(files));
+            const idx = orderedFiles.indexOf(selectedFile);
+            if (idx !== -1 && idx + 1 < orderedFiles.length) {
+              setNextFileForTransition(orderedFiles[idx + 1]);
+              setIsTransitioning(true);
+              setTimeout(() => {
+                handleSelectFile(orderedFiles[idx + 1], true, true);
+                setIsTransitioning(false);
+                setNextFileForTransition(null);
+              }, 1000); // 1s transition
+            } else {
+              setIsPlaying(false);
+            }
+          } else {
+            setIsPlaying(false);
           }
-        }
+        };
+        setTimeout(moveNext, 500);
       }
     }
     scrollInterval.current = setInterval(scrollDown, scrollDelay);
@@ -531,60 +552,128 @@ export default function Home() {
           className="flex-1 border-l border-zinc-700 bg-zinc-900 p-4 flex flex-col h-screen min-h-0 overflow-x-hidden"
           style={isFullscreen ? { zIndex: 50, position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', border: 'none', borderRadius: 0 } : {}}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto" style={{ position: 'relative', height: '100%' }}>
+            <div
+              ref={transitionContainerRef}
+              style={{
+                height: '100%',
+                width: '100%',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                transition: isTransitioning ? 'transform 1s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+                transform: isTransitioning ? 'translateY(-100%)' : 'translateY(0%)',
+                willChange: 'transform',
+              }}
+            >
+              <div style={{ height: '100%', width: '100%' }}>
+                {fileContent !== null && selectedFile && (
+                  <Highlight
+                    code={fileContent}
+                    language={getLanguageFromFilename(selectedFile) || "text"}
+                    theme={themes[selectedTheme]}
+                  >
+                    {({ className, style, tokens, getLineProps, getTokenProps }: {
+                      className: string;
+                      style: React.CSSProperties;
+                      tokens: any[][];
+                      getLineProps: (props: any) => any;
+                      getTokenProps: (props: any) => any;
+                    }) => (
+                      <pre
+                        ref={scrollRef}
+                        className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto w-full ${className}`}
+                        style={style}
+                      >
+                        {tokens.map((line, i) => {
+                          const { key, ...lineProps } = getLineProps({ line, key: i });
+                          return (
+                            <div
+                              key={i}
+                              {...lineProps}
+                              style={{ position: 'relative', paddingLeft: '3.5em' }}
+                            >
+                              <span
+                                style={{
+                                  position: 'absolute',
+                                  left: 0,
+                                  width: '2.5em',
+                                  userSelect: 'none',
+                                  color: '#888',
+                                  textAlign: 'right',
+                                  paddingRight: '1em',
+                                }}
+                                className="select-none"
+                              >
+                                {i + 1}
+                              </span>
+                              {line.map((token, key) => {
+                                const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key });
+                                return <span key={key} {...tokenProps} />;
+                              })}
+                            </div>
+                          );
+                        })}
+                      </pre>
+                    )}
+                  </Highlight>
+                )}
+              </div>
+              {isTransitioning && nextFileForTransition && (
+                <div style={{ height: '100%', width: '100%' }}>
+                  <Highlight
+                    code={nextFileCache && nextFileCache.path === nextFileForTransition ? nextFileCache.content : ''}
+                    language={getLanguageFromFilename(nextFileForTransition) || "text"}
+                    theme={themes[selectedTheme]}
+                  >
+                    {({ className, style, tokens, getLineProps, getTokenProps }: {
+                      className: string;
+                      style: React.CSSProperties;
+                      tokens: any[][];
+                      getLineProps: (props: any) => any;
+                      getTokenProps: (props: any) => any;
+                    }) => (
+                      <pre
+                        className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto w-full ${className}`}
+                        style={style}
+                      >
+                        {tokens.map((line, i) => {
+                          const { key, ...lineProps } = getLineProps({ line, key: i });
+                          return (
+                            <div
+                              key={i}
+                              {...lineProps}
+                              style={{ position: 'relative', paddingLeft: '3.5em' }}
+                            >
+                              <span
+                                style={{
+                                  position: 'absolute',
+                                  left: 0,
+                                  width: '2.5em',
+                                  userSelect: 'none',
+                                  color: '#888',
+                                  textAlign: 'right',
+                                  paddingRight: '1em',
+                                }}
+                                className="select-none"
+                              >
+                                {i + 1}
+                              </span>
+                              {line.map((token, key) => {
+                                const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key });
+                                return <span key={key} {...tokenProps} />;
+                              })}
+                            </div>
+                          );
+                        })}
+                      </pre>
+                    )}
+                  </Highlight>
+                </div>
+              )}
+            </div>
             {fileLoading && selectedFile && <div className="text-gray-300">Loading file...</div>}
             {fileError && selectedFile && <div className="text-red-400">{fileError}</div>}
-            {fileContent && selectedFile && (
-              <Highlight
-                code={fileContent}
-                language={getLanguageFromFilename(selectedFile) || "text"}
-                theme={themes[selectedTheme]}
-              >
-                {({ className, style, tokens, getLineProps, getTokenProps }: {
-                  className: string;
-                  style: React.CSSProperties;
-                  tokens: any[][];
-                  getLineProps: (props: any) => any;
-                  getTokenProps: (props: any) => any;
-                }) => (
-                  <pre
-                    ref={scrollRef}
-                    className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto w-full ${className}`}
-                    style={style}
-                  >
-                    {tokens.map((line, i) => {
-                      const { key, ...lineProps } = getLineProps({ line, key: i });
-                      return (
-                        <div
-                          key={i}
-                          {...lineProps}
-                          style={{ position: 'relative', paddingLeft: '3.5em' }}
-                        >
-                          <span
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              width: '2.5em',
-                              userSelect: 'none',
-                              color: '#888',
-                              textAlign: 'right',
-                              paddingRight: '1em',
-                            }}
-                            className="select-none"
-                          >
-                            {i + 1}
-                          </span>
-                          {line.map((token, key) => {
-                            const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key });
-                            return <span key={key} {...tokenProps} />;
-                          })}
-                        </div>
-                      );
-                    })}
-                  </pre>
-                )}
-              </Highlight>
-            )}
             {!selectedFile && <div className="italic text-gray-500">No file selected. Select a file to start playing.</div>}
           </div>
           <div className="flex items-center gap-4 mt-2">
