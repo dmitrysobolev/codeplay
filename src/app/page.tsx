@@ -219,7 +219,7 @@ export default function Home() {
   const [leftWidth, setLeftWidth] = useState(300); // px
   const minLeftWidth = 180;
   const maxLeftWidth = 600;
-  const dragging = useRef(false);
+  const [dragging, setDragging] = useState(false);
   const startX = useRef(0);
   const startWidth = useRef(0);
   // Ref for Play/Pause button
@@ -261,7 +261,7 @@ export default function Home() {
   // Mouse event handlers for resizing
   useEffect(() => {
     function onMouseMove(e: MouseEvent) {
-      if (!dragging.current) return;
+      if (!dragging) return;
       const newWidth = Math.min(
         maxLeftWidth,
         Math.max(minLeftWidth, startWidth.current + (e.clientX - startX.current))
@@ -269,11 +269,11 @@ export default function Home() {
       setLeftWidth(newWidth);
     }
     function onMouseUp() {
-      dragging.current = false;
+      setDragging(false);
       document.body.style.cursor = '';
       setBodyUserSelect('');
     }
-    if (dragging.current) {
+    if (dragging) {
       window.addEventListener('mousemove', onMouseMove);
       window.addEventListener('mouseup', onMouseUp);
       document.body.style.cursor = 'col-resize';
@@ -285,7 +285,7 @@ export default function Home() {
       document.body.style.cursor = '';
       setBodyUserSelect('');
     };
-  }, [dragging.current]);
+  }, [dragging]);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -513,7 +513,7 @@ export default function Home() {
           className="bg-zinc-800 hover:bg-zinc-700 transition-colors duration-100"
           onMouseDown={e => {
             e.preventDefault(); // Prevent text selection
-            dragging.current = true;
+            setDragging(true);
             startX.current = e.clientX;
             startWidth.current = leftWidth;
           }}
