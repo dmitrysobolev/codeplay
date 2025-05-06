@@ -153,13 +153,13 @@ function FileTree({ nodes, selectedFile, onSelect }: {
               <div>
                 <button
                   type="button"
-                  className="text-blue-200 font-bold bg-transparent border-none cursor-pointer mr-1"
+                  className="text-blue-400 font-bold bg-transparent border-none cursor-pointer mr-1"
                   onClick={() => toggleFolder(node.path)}
                   aria-label={openFolders[node.path] ? "Collapse folder" : "Expand folder"}
                 >
                   {openFolders[node.path] ? "▼" : "▶"}
                 </button>
-                <span className="text-blue-200 font-bold">{node.name}</span>
+                <span className="text-blue-400 font-bold">{node.name}</span>
                 {openFolders[node.path] && node.children && (
                   <FileTree nodes={node.children as FileNode[]} selectedFile={selectedFile} onSelect={onSelect} />
                 )}
@@ -167,7 +167,7 @@ function FileTree({ nodes, selectedFile, onSelect }: {
             ) : (
               <button
                 type="button"
-                className={`text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "font-bold text-green-400" : ""}`}
+                className={`text-blue-200 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "text-green-400" : ""}`}
                 onClick={() => onSelect(node.path)}
                 aria-pressed={selectedFile === node.path}
               >
