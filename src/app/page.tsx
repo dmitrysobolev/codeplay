@@ -477,7 +477,7 @@ export default function Home() {
                 )}
               </Highlight>
             )}
-            {!selectedFile && <div className="italic text-gray-500">Select a file to start playing.</div>}
+            {!selectedFile && <div className="italic text-gray-500">No file selected. Select a file to start playing.</div>}
           </div>
         </div>
       </div>
