@@ -485,6 +485,11 @@ export default function Home() {
               placeholder="GitHub Repo URL"
               value={repoInput}
               onChange={e => setRepoInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !loading && repoInput.trim()) {
+                  handleFetchFiles();
+                }
+              }}
             />
             <button
               type="button"
