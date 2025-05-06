@@ -167,7 +167,7 @@ function FileTree({ nodes, selectedFile, onSelect }: {
             ) : (
               <button
                 type="button"
-                className={`text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "font-bold text-blue-200" : ""}`}
+                className={`text-blue-400 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "font-bold text-green-400" : ""}`}
                 onClick={() => onSelect(node.path)}
                 aria-pressed={selectedFile === node.path}
               >
