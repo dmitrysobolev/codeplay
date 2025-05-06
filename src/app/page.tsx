@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Highlight, themes } from "prism-react-renderer";
 import ThemeSelector from "./ThemeSelector";
 import PlayPauseButton from "./PlayPauseButton";
@@ -7,6 +7,7 @@ import PrevButton from "./PrevButton";
 import NextButton from "./NextButton";
 import FileTree, { FileNode } from "./FileTree";
 import PlaybackSpeedSelector from "./PlaybackSpeedSelector";
+import type { Language } from "prism-react-renderer";
 
 function parseRepoUrl(input: string): { owner: string, repo: string } | null {
   const urlPattern = /github\.com\/(.+?)\/(.+?)(?:\.git|\/|$)/i;
@@ -91,7 +92,7 @@ function getLanguageFromFilename(filename: string): Language | undefined {
 // Utility: Convert flat file list to tree structure
 function buildFileTree(paths: string[]): FileNode[] {
   const root: { [key: string]: FileNode } = {};
-  paths.forEach(path => {
+  for (const path of paths) {
     const parts = path.split("/");
     let current = root;
     for (let i = 0; i < parts.length; i++) {
@@ -105,14 +106,14 @@ function buildFileTree(paths: string[]): FileNode[] {
         };
       }
       if (i < parts.length - 1) {
-        current = current[part].children!;
+        current = current[part].children as { [key: string]: FileNode };
       }
     }
-  });
+  }
   function toArray(obj: { [key: string]: FileNode }): FileNode[] {
     return Object.values(obj).map(node =>
       node.type === "folder"
-        ? { ...node, children: toArray(node.children!) }
+        ? { ...node, children: toArray(node.children as { [key: string]: FileNode }) }
         : node
     );
   }
@@ -191,8 +192,6 @@ export default function Home() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [nextFileForTransition, setNextFileForTransition] = useState<string | null>(null);
   const transitionContainerRef = useRef<HTMLDivElement | null>(null);
-  // Add state to track which file is being loaded
-  const [loadingFilePath, setLoadingFilePath] = useState<string | null>(null);
   // Add playback speed state
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const playbackSpeedOptions = [0.5, 1, 1.5, 2];
@@ -201,7 +200,7 @@ export default function Home() {
   function setBodyUserSelect(value: string) {
     document.body.style.userSelect = value;
     // For Safari
-    (document.body.style as any).webkitUserSelect = value;
+    (document.body.style as CSSStyleDeclaration & { webkitUserSelect?: string }).webkitUserSelect = value;
   }
 
   // Mouse event handlers for resizing
@@ -408,7 +407,7 @@ export default function Home() {
   }, [files, repoInfo, branchUsed, selectedFile]);
 
   // Update handleSelectFile to use loadingFilePath and only update fileContent after loading
-  const handleSelectFile = async (file: string, autoPlay = false, useCache = false, isTransition = false) => {
+  const handleSelectFile = useCallback(async (file: string, autoPlay = false, useCache = false, isTransition = false) => {
     if (!repoInfo || !branchUsed) return;
     if (!githubToken || githubToken.trim() === "") {
       setFileError("GitHub personal token is required. Please set it in settings (⚙️) below.");
@@ -416,7 +415,7 @@ export default function Home() {
       return;
     }
     if (isTransition) {
-      setLoadingFilePath(file);
+      setNextFileForTransition(file);
       return;
     }
     setFileError(null);
@@ -426,12 +425,11 @@ export default function Home() {
       setSelectedFile(file);
       setFileContent(nextFileCache.content);
       setFileLoading(false);
-      setLoadingFilePath(null);
+      setNextFileForTransition(null);
       return;
     }
     const content = await fetchFileContent(repoInfo.owner, repoInfo.repo, file, branchUsed, githubToken);
     setFileLoading(false);
-    setLoadingFilePath(null);
     if (content === null) {
       setFileError("Could not fetch file content.");
       setIsPlaying(false);
@@ -439,14 +437,7 @@ export default function Home() {
     }
     setSelectedFile(file);
     setFileContent(content);
-  };
-
-  // Keyboard accessibility for file list
-  const handleFileKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, file: string) => {
-    if (e.key === "Enter" || e.key === " ") {
-      handleSelectFile(file);
-    }
-  };
+  }, [repoInfo, branchUsed, githubToken, nextFileCache, setSelectedFile, setFileContent, setFileError, setFileLoading, setIsPlaying]);
 
   useEffect(() => {
     function onFullscreenChange() {
@@ -602,22 +593,16 @@ export default function Home() {
                   <Highlight
                     code={fileContent}
                     language={getLanguageFromFilename(selectedFile) || "text"}
-                    theme={themes[selectedTheme]}
+                    theme={themes[selectedTheme as keyof typeof themes]}
                   >
-                    {({ className, style, tokens, getLineProps, getTokenProps }: {
-                      className: string;
-                      style: React.CSSProperties;
-                      tokens: any[][];
-                      getLineProps: (props: any) => any;
-                      getTokenProps: (props: any) => any;
-                    }) => (
+                    {({ className, style, tokens, getLineProps, getTokenProps }) => (
                       <pre
                         ref={scrollRef}
                         className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto w-full ${className}`}
                         style={style}
                       >
                         {tokens.map((line, i) => {
-                          const { key, ...lineProps } = getLineProps({ line, key: i });
+                          const lineProps = getLineProps({ line });
                           return (
                             <div
                               key={i}
@@ -638,9 +623,9 @@ export default function Home() {
                               >
                                 {i + 1}
                               </span>
-                              {line.map((token, key) => {
-                                const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key });
-                                return <span key={key} {...tokenProps} />;
+                              {line.map((token, idx) => {
+                                const tokenProps = getTokenProps({ token });
+                                return <span key={idx} {...tokenProps} />;
                               })}
                             </div>
                           );
@@ -655,21 +640,15 @@ export default function Home() {
                   <Highlight
                     code={nextFileCache && nextFileCache.path === nextFileForTransition ? nextFileCache.content : ''}
                     language={getLanguageFromFilename(nextFileForTransition) || "text"}
-                    theme={themes[selectedTheme]}
+                    theme={themes[selectedTheme as keyof typeof themes]}
                   >
-                    {({ className, style, tokens, getLineProps, getTokenProps }: {
-                      className: string;
-                      style: React.CSSProperties;
-                      tokens: any[][];
-                      getLineProps: (props: any) => any;
-                      getTokenProps: (props: any) => any;
-                    }) => (
+                    {({ className, style, tokens, getLineProps, getTokenProps }) => (
                       <pre
                         className={`rounded p-4 whitespace-pre-wrap text-sm transition-all text-gray-100 h-full overflow-y-auto w-full ${className}`}
                         style={style}
                       >
                         {tokens.map((line, i) => {
-                          const { key, ...lineProps } = getLineProps({ line, key: i });
+                          const lineProps = getLineProps({ line });
                           return (
                             <div
                               key={i}
@@ -690,9 +669,9 @@ export default function Home() {
                               >
                                 {i + 1}
                               </span>
-                              {line.map((token, key) => {
-                                const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key });
-                                return <span key={key} {...tokenProps} />;
+                              {line.map((token, idx) => {
+                                const tokenProps = getTokenProps({ token });
+                                return <span key={idx} {...tokenProps} />;
                               })}
                             </div>
                           );
@@ -709,7 +688,7 @@ export default function Home() {
           <div className="flex items-center gap-4 mt-2">
             <span
               ref={filePathContainerRef}
-              className="font-mono text-sm text-gray-300 flex-1"
+              className="font-mono text-sm text-gray-300 flex-1 file-path-scrollbar"
               style={{
                 display: 'block',
                 position: 'relative',
@@ -718,10 +697,6 @@ export default function Home() {
                 whiteSpace: 'nowrap',
                 scrollbarWidth: 'none', // Firefox
                 msOverflowStyle: 'none', // IE/Edge
-              }}
-              // Hide scrollbar for Webkit browsers
-              css={{
-                '::-webkit-scrollbar': { display: 'none' },
               }}
             >
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
@@ -783,8 +758,9 @@ export default function Home() {
                     ×
                   </button>
                   <h3 className="text-lg font-semibold mb-4 text-white">Settings</h3>
-                  <label className="block text-gray-300 mb-2">GitHub Personal Token</label>
+                  <label htmlFor="github-token" className="block text-gray-300 mb-2">GitHub Personal Token</label>
                   <input
+                    id="github-token"
                     type="text"
                     className="w-full border border-zinc-600 rounded px-3 py-2 bg-zinc-900 text-white mb-4 font-mono text-base"
                     value={githubToken}

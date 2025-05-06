@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 type FileNode = {
   name: string;
@@ -11,7 +11,7 @@ type FileTreeProps = {
   nodes: FileNode[];
   selectedFile: string | null;
   onSelect: (file: string) => void;
-  containerRef?: React.RefObject<HTMLDivElement>;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 };
 
 function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps) {
@@ -21,8 +21,7 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
   const isTopLevel = !containerRef;
   const effectiveContainerRef = containerRef || localContainerRef;
 
-  // Helper to collect all folder paths recursively
-  function collectFolderPaths(nodes: FileNode[], acc: Set<string>) {
+  const collectFolderPaths = useCallback((nodes: FileNode[], acc: Set<string>) => {
     for (const node of nodes) {
       if (node.type === "folder") {
         acc.add(node.path);
@@ -31,15 +30,14 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
         }
       }
     }
-  }
+  }, []);
 
   // Expand all folders by default when nodes change
   useEffect(() => {
     const allFolders = new Set<string>();
     collectFolderPaths(nodes, allFolders);
     setOpenFolders(Object.fromEntries(Array.from(allFolders).map(path => [path, true])));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodes]);
+  }, [nodes, collectFolderPaths]);
 
   // Scroll selected file into middle of view
   useEffect(() => {
@@ -52,7 +50,7 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
       const scroll = offset - container.clientHeight / 2 + selectedRect.height / 2;
       container.scrollBy({ top: scroll, behavior: 'smooth' });
     }
-  }, [selectedFile]);
+  }, [selectedFile, effectiveContainerRef]);
 
   const toggleFolder = (path: string) => {
     setOpenFolders(prev => ({ ...prev, [path]: !prev[path] }));
