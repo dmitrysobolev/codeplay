@@ -361,6 +361,49 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [selectedFile, fileLoading, fileError]);
 
+  // Update handleSelectFile to use loadingFilePath and only update fileContent after loading
+  const handleSelectFile = useCallback(async (file: string, autoPlay = false, useCache = false, isTransition = false) => {
+    if (!repoInfo || !branchUsed) return;
+    if (!githubToken || githubToken.trim() === "") {
+      setFileError("GitHub personal token is required. Please set it in settings (⚙️) below.");
+      setIsPlaying(false);
+      return;
+    }
+    if (isTransition) {
+      setNextFileForTransition(file);
+      return;
+    }
+    setFileError(null);
+    setFileLoading(true);
+    setIsPlaying(autoPlay);
+    if (useCache && nextFileCache && nextFileCache.path === file) {
+      setSelectedFile(file);
+      setFileContent(nextFileCache.content);
+      setFileLoading(false);
+      setNextFileForTransition(null);
+      return;
+    }
+    const content = await fetchFileContent(repoInfo.owner, repoInfo.repo, file, branchUsed, githubToken);
+    setFileLoading(false);
+    if (content === null) {
+      setFileError("Could not fetch file content.");
+      setIsPlaying(false);
+      return;
+    }
+    setSelectedFile(file);
+    setFileContent(content);
+  }, [repoInfo, branchUsed, githubToken, nextFileCache]);
+
+  // Auto-select and play the first file when files, repoInfo, and branchUsed are set
+  useEffect(() => {
+    if (files && files.length > 0 && repoInfo && branchUsed && !selectedFile) {
+      const orderedFiles = flattenFileTree(buildFileTree(files));
+      if (orderedFiles.length > 0) {
+        handleSelectFile(orderedFiles[0], true);
+      }
+    }
+  }, [files, repoInfo, branchUsed, selectedFile, handleSelectFile]);
+
   const handleFetchFiles = async () => {
     setError(null);
     setFiles(null);
@@ -395,49 +438,6 @@ export default function Home() {
     setFiles(fileList);
     setBranchUsed(branch);
   };
-
-  // Auto-select and play the first file when files, repoInfo, and branchUsed are set
-  useEffect(() => {
-    if (files && files.length > 0 && repoInfo && branchUsed && !selectedFile) {
-      const orderedFiles = flattenFileTree(buildFileTree(files));
-      if (orderedFiles.length > 0) {
-        handleSelectFile(orderedFiles[0], true);
-      }
-    }
-  }, [files, repoInfo, branchUsed, selectedFile]);
-
-  // Update handleSelectFile to use loadingFilePath and only update fileContent after loading
-  const handleSelectFile = useCallback(async (file: string, autoPlay = false, useCache = false, isTransition = false) => {
-    if (!repoInfo || !branchUsed) return;
-    if (!githubToken || githubToken.trim() === "") {
-      setFileError("GitHub personal token is required. Please set it in settings (⚙️) below.");
-      setIsPlaying(false);
-      return;
-    }
-    if (isTransition) {
-      setNextFileForTransition(file);
-      return;
-    }
-    setFileError(null);
-    setFileLoading(true);
-    setIsPlaying(autoPlay);
-    if (useCache && nextFileCache && nextFileCache.path === file) {
-      setSelectedFile(file);
-      setFileContent(nextFileCache.content);
-      setFileLoading(false);
-      setNextFileForTransition(null);
-      return;
-    }
-    const content = await fetchFileContent(repoInfo.owner, repoInfo.repo, file, branchUsed, githubToken);
-    setFileLoading(false);
-    if (content === null) {
-      setFileError("Could not fetch file content.");
-      setIsPlaying(false);
-      return;
-    }
-    setSelectedFile(file);
-    setFileContent(content);
-  }, [repoInfo, branchUsed, githubToken, nextFileCache, setSelectedFile, setFileContent, setFileError, setFileLoading, setIsPlaying]);
 
   useEffect(() => {
     function onFullscreenChange() {
