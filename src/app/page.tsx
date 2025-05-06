@@ -341,11 +341,14 @@ export default function Home() {
     }
     setFiles(fileList);
     setBranchUsed(branch);
-    // Auto-select and play the first file if available
-    if (fileList.length > 0) {
-      handleSelectFile(fileList[0], true);
-    }
   };
+
+  // Auto-select and play the first file when files, repoInfo, and branchUsed are set
+  useEffect(() => {
+    if (files && files.length > 0 && repoInfo && branchUsed && !selectedFile) {
+      handleSelectFile(files[0], true);
+    }
+  }, [files, repoInfo, branchUsed, selectedFile]);
 
   // If useCache is true and the next file is cached, use it
   const handleSelectFile = async (file: string, autoPlay = false, useCache = false) => {
