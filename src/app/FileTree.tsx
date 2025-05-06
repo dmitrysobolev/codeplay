@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 type FileNode = {
   name: string;
@@ -11,10 +11,15 @@ type FileTreeProps = {
   nodes: FileNode[];
   selectedFile: string | null;
   onSelect: (file: string) => void;
+  containerRef?: React.RefObject<HTMLDivElement>;
 };
 
-function FileTree({ nodes, selectedFile, onSelect }: FileTreeProps) {
+function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps) {
   const [openFolders, setOpenFolders] = useState<{ [path: string]: boolean }>({});
+  const localContainerRef = useRef<HTMLDivElement | null>(null);
+  const selectedRef = useRef<HTMLButtonElement | null>(null);
+  const isTopLevel = !containerRef;
+  const effectiveContainerRef = containerRef || localContainerRef;
 
   // Helper to collect all folder paths recursively
   function collectFolderPaths(nodes: FileNode[], acc: Set<string>) {
@@ -36,48 +41,65 @@ function FileTree({ nodes, selectedFile, onSelect }: FileTreeProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes]);
 
+  // Scroll selected file into middle of view
+  useEffect(() => {
+    const container = effectiveContainerRef.current;
+    const selectedEl = selectedRef.current;
+    if (container && selectedEl) {
+      const containerRect = container.getBoundingClientRect();
+      const selectedRect = selectedEl.getBoundingClientRect();
+      const offset = selectedRect.top - containerRect.top;
+      const scroll = offset - container.clientHeight / 2 + selectedRect.height / 2;
+      container.scrollBy({ top: scroll, behavior: 'smooth' });
+    }
+  }, [selectedFile]);
+
   const toggleFolder = (path: string) => {
     setOpenFolders(prev => ({ ...prev, [path]: !prev[path] }));
   };
 
   return (
-    <ul className="pl-4">
-      {nodes
-        .slice()
-        .sort((a, b) => {
-          if (a.type === b.type) return a.name.localeCompare(b.name);
-          return a.type === 'folder' ? -1 : 1;
-        })
-        .map(node => (
-          <li key={node.path} className="break-all">
-            {node.type === "folder" ? (
-              <div>
+    <div ref={isTopLevel ? effectiveContainerRef : undefined} className="overflow-y-auto max-h-full">
+      <ul className="pl-4">
+        {nodes
+          .slice()
+          .sort((a, b) => {
+            if (a.type === b.type) return a.name.localeCompare(b.name);
+            return a.type === 'folder' ? -1 : 1;
+          })
+          .map(node => (
+            <li key={node.path} className="break-all">
+              {node.type === "folder" ? (
+                <div>
+                  <button
+                    type="button"
+                    className="text-blue-400 font-bold bg-transparent border-none cursor-pointer mr-1"
+                    onClick={() => toggleFolder(node.path)}
+                    aria-label={openFolders[node.path] ? "Collapse folder" : "Expand folder"}
+                  >
+                    {openFolders[node.path] ? "▼" : "▶"}
+                  </button>
+                  <span className="text-blue-400 font-bold">{node.name}</span>
+                  {openFolders[node.path] && node.children && (
+                    <FileTree nodes={node.children as FileNode[]} selectedFile={selectedFile} onSelect={onSelect} containerRef={effectiveContainerRef} />
+                  )}
+                </div>
+              ) : (
                 <button
                   type="button"
-                  className="text-blue-400 font-bold bg-transparent border-none cursor-pointer mr-1"
-                  onClick={() => toggleFolder(node.path)}
-                  aria-label={openFolders[node.path] ? "Collapse folder" : "Expand folder"}
+                  ref={selectedFile === node.path ? selectedRef : undefined}
+                  className={`pl-6 py-1 w-full text-left truncate rounded ${selectedFile === node.path ? "bg-blue-700 text-white" : "text-gray-300 hover:bg-zinc-800"}`}
+                  style={{ fontWeight: selectedFile === node.path ? 600 : 400 }}
+                  onClick={() => onSelect(node.path)}
+                  tabIndex={0}
                 >
-                  {openFolders[node.path] ? "▼" : "▶"}
+                  {node.name}
                 </button>
-                <span className="text-blue-400 font-bold">{node.name}</span>
-                {openFolders[node.path] && node.children && (
-                  <FileTree nodes={node.children as FileNode[]} selectedFile={selectedFile} onSelect={onSelect} />
-                )}
-              </div>
-            ) : (
-              <button
-                type="button"
-                className={`text-blue-200 hover:underline cursor-pointer bg-transparent border-none p-0 m-0 text-left ${selectedFile === node.path ? "text-green-400" : ""}`}
-                onClick={() => onSelect(node.path)}
-                aria-pressed={selectedFile === node.path}
-              >
-                {node.name}
-              </button>
-            )}
-          </li>
-        ))}
-    </ul>
+              )}
+            </li>
+          ))}
+      </ul>
+    </div>
   );
 }
 
