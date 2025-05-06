@@ -379,6 +379,10 @@ export default function Home() {
     setFileError(null);
     setBranchUsed(null);
     setNextFileCache(null);
+    if (!githubToken || githubToken.trim() === "") {
+      setError("GitHub personal token is required. Please set it in settings (⚙️) below.");
+      return;
+    }
     const info = parseRepoUrl(repoInput.trim());
     if (!info) {
       setError("Invalid repo URL or format. Use https://github.com/owner/repo or owner/repo.");
@@ -415,6 +419,11 @@ export default function Home() {
   // If useCache is true and the next file is cached, use it
   const handleSelectFile = async (file: string, autoPlay = false, useCache = false) => {
     if (!repoInfo || !branchUsed) return;
+    if (!githubToken || githubToken.trim() === "") {
+      setFileError("GitHub personal token is required. Please set it in settings (⚙️) below.");
+      setIsPlaying(false);
+      return;
+    }
     setSelectedFile(file);
     setFileContent(null);
     setFileError(null);
@@ -612,7 +621,7 @@ export default function Home() {
             </button>
             {showSettings && (
               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
-                <div className="bg-zinc-800 p-6 rounded shadow-lg min-w-[320px] relative">
+                <div className="bg-zinc-800 p-6 rounded shadow-lg min-w-[520px] max-w-full w-[520px] relative">
                   <button
                     className="absolute top-2 right-2 text-gray-400 hover:text-white"
                     onClick={() => setShowSettings(false)}
@@ -624,10 +633,11 @@ export default function Home() {
                   <label className="block text-gray-300 mb-2">GitHub Personal Token</label>
                   <input
                     type="text"
-                    className="w-full border border-zinc-600 rounded px-3 py-2 bg-zinc-900 text-white mb-4"
+                    className="w-full border border-zinc-600 rounded px-3 py-2 bg-zinc-900 text-white mb-4 font-mono text-base"
                     value={githubToken}
                     onChange={e => setGithubToken(e.target.value)}
                     placeholder="Enter your GitHub token"
+                    autoComplete="off"
                   />
                   <div className="text-xs text-gray-400 mb-2">Token is stored in your browser only.</div>
                   <button
