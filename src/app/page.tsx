@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Highlight, themes } from "prism-react-renderer";
 import ThemeSelector from "./ThemeSelector";
+import PlayPauseButton from "./PlayPauseButton";
 
 function parseRepoUrl(input: string): { owner: string, repo: string } | null {
   const urlPattern = /github\.com\/(.+?)\/(.+?)(?:\.git|\/|$)/i;
@@ -584,27 +585,12 @@ export default function Home() {
             <span className="font-mono text-sm text-gray-300 flex-1">
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
             </span>
-            <button
-              ref={playPauseBtnRef}
-              type="button"
-              className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-400 ${isPlaying ? "bg-red-500 hover:bg-red-600" : "bg-green-600 hover:bg-green-700"} text-white`}
+            <PlayPauseButton
+              isPlaying={isPlaying}
               onClick={() => setIsPlaying(p => !p)}
               disabled={!selectedFile || fileLoading || !!fileError}
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? (
-                // Pause icon: two vertical bars
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />
-                  <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" />
-                </svg>
-              ) : (
-                // Play icon: triangle
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <polygon points="8,5 20,12 8,19" fill="currentColor" />
-                </svg>
-              )}
-            </button>
+              buttonRef={playPauseBtnRef}
+            />
             <button
               type="button"
               className="px-2 py-1 rounded bg-zinc-700 text-white ml-2 hover:bg-zinc-600"
