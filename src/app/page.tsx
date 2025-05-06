@@ -174,6 +174,8 @@ export default function Home() {
     }
     return "";
   });
+  const filePathContainerRef = useRef<HTMLSpanElement | null>(null);
+  const [scrollDir, setScrollDir] = useState<"right" | "left">("right");
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
@@ -391,6 +393,52 @@ export default function Home() {
     }
   }, [githubToken]);
 
+  // Animate file path scrolling if it overflows
+  useEffect(() => {
+    const el = filePathContainerRef.current;
+    if (!el || !selectedFile) return;
+    let animId: number | null = null;
+    let dir: "right" | "left" = "left"; // Start by moving left
+    const speed = 0.4; // px per frame (slower)
+    const delay = 1000; // ms to pause at each end
+
+    // Initially scroll to the far right (show file name)
+    el.scrollLeft = el.scrollWidth - el.clientWidth;
+
+    function animate() {
+      if (!el) return;
+      if (el.scrollWidth <= el.clientWidth) return;
+      if (dir === "left") {
+        if (el.scrollLeft > 0) {
+          el.scrollLeft -= speed;
+          animId = requestAnimationFrame(animate);
+        } else {
+          setTimeout(() => {
+            dir = "right";
+            setScrollDir("right");
+            animId = requestAnimationFrame(animate);
+          }, delay);
+        }
+      } else {
+        if (el.scrollLeft + el.clientWidth < el.scrollWidth) {
+          el.scrollLeft += speed;
+          animId = requestAnimationFrame(animate);
+        } else {
+          setTimeout(() => {
+            dir = "left";
+            setScrollDir("left");
+            animId = requestAnimationFrame(animate);
+          }, delay);
+        }
+      }
+    }
+    animId = requestAnimationFrame(animate);
+    return () => {
+      if (animId) cancelAnimationFrame(animId);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFile, scrollDir]);
+
   const orderedFiles = files ? flattenFileTree(buildFileTree(files)) : [];
   const currentIndex = selectedFile ? orderedFiles.indexOf(selectedFile) : -1;
   const hasPrev = currentIndex > 0;
@@ -520,7 +568,23 @@ export default function Home() {
             {!selectedFile && <div className="italic text-gray-500">No file selected. Select a file to start playing.</div>}
           </div>
           <div className="flex items-center gap-4 mt-2">
-            <span className="font-mono text-sm text-gray-300 flex-1">
+            <span
+              ref={filePathContainerRef}
+              className="font-mono text-sm text-gray-300 flex-1"
+              style={{
+                display: 'block',
+                position: 'relative',
+                width: '100%',
+                overflowX: 'auto',
+                whiteSpace: 'nowrap',
+                scrollbarWidth: 'none', // Firefox
+                msOverflowStyle: 'none', // IE/Edge
+              }}
+              // Hide scrollbar for Webkit browsers
+              css={{
+                '::-webkit-scrollbar': { display: 'none' },
+              }}
+            >
               {selectedFile ? selectedFile : <span className="italic text-gray-500">No file selected</span>}
             </span>
             <PrevButton
