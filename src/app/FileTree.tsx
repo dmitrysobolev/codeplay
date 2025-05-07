@@ -57,7 +57,7 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
   };
 
   return (
-    <div ref={isTopLevel ? effectiveContainerRef : undefined} className="overflow-y-auto max-h-full">
+    <div ref={isTopLevel ? effectiveContainerRef : undefined} className="max-h-full">
       <ul className="pl-4">
         {nodes
           .slice()
