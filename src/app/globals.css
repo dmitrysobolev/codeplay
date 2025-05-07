@@ -32,3 +32,26 @@ body {
 .file-path-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome/Safari/Webkit */
 }
+
+/* Custom dark scrollbars for all elements */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+  background: #18181b; /* dark background */
+}
+::-webkit-scrollbar-thumb {
+  background: #33353b; /* slightly lighter thumb */
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #444654;
+}
+::-webkit-scrollbar-corner {
+  background: #18181b;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #33353b #18181b;
+}
