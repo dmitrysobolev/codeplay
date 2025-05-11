@@ -57,8 +57,8 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
   };
 
   return (
-    <div ref={isTopLevel ? effectiveContainerRef : undefined} className="max-h-full">
-      <ul className="pl-4">
+    <div ref={isTopLevel ? effectiveContainerRef : undefined} className="max-h-full overflow-x-auto whitespace-nowrap">
+      <ul className="pl-4 inline-block min-w-full">
         {nodes
           .slice()
           .sort((a, b) => {
@@ -66,9 +66,9 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
             return a.type === 'folder' ? -1 : 1;
           })
           .map(node => (
-            <li key={node.path} className="break-all">
+            <li key={node.path} className="break-all whitespace-nowrap">
               {node.type === "folder" ? (
-                <div>
+                <div className="whitespace-nowrap">
                   <button
                     type="button"
                     className="text-blue-400 font-bold bg-transparent border-none cursor-pointer mr-1"
@@ -77,7 +77,7 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
                   >
                     {openFolders[node.path] ? "▼" : "▶"}
                   </button>
-                  <span className="text-blue-400 font-bold">{node.name}</span>
+                  <span className="text-blue-400 font-bold whitespace-nowrap">{node.name}</span>
                   {openFolders[node.path] && node.children && (
                     <FileTree nodes={node.children as FileNode[]} selectedFile={selectedFile} onSelect={onSelect} containerRef={effectiveContainerRef} />
                   )}
@@ -86,7 +86,7 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
                 <button
                   type="button"
                   ref={selectedFile === node.path ? selectedRef : undefined}
-                  className={`pl-6 py-1 w-full text-left truncate rounded ${selectedFile === node.path ? "bg-blue-700 text-white" : "text-gray-300 hover:bg-zinc-800"}`}
+                  className={`pl-6 py-1 w-full text-left rounded whitespace-nowrap ${selectedFile === node.path ? "bg-blue-700 text-white" : "text-gray-300 hover:bg-zinc-800"}`}
                   style={{ fontWeight: selectedFile === node.path ? 600 : 400 }}
                   onClick={() => onSelect(node.path)}
                   tabIndex={0}
