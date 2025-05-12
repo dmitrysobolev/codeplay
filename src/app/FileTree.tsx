@@ -86,7 +86,7 @@ function FileTree({ nodes, selectedFile, onSelect, containerRef }: FileTreeProps
                 <button
                   type="button"
                   ref={selectedFile === node.path ? selectedRef : undefined}
-                  className={`pl-6 py-1 w-full text-left rounded whitespace-nowrap ${selectedFile === node.path ? "bg-blue-700 text-white" : "text-gray-300 hover:bg-zinc-800"}`}
+                  className={`pl-6 pr-6 py-1 text-left rounded whitespace-nowrap inline-block ${selectedFile === node.path ? "bg-blue-700 text-white" : "text-gray-300 hover:bg-zinc-800"}`}
                   style={{ fontWeight: selectedFile === node.path ? 600 : 400 }}
                   onClick={() => onSelect(node.path)}
                   tabIndex={0}
