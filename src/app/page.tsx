@@ -194,7 +194,7 @@ export default function Home() {
   const transitionContainerRef = useRef<HTMLDivElement | null>(null);
   // Add playback speed state
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const playbackSpeedOptions = [0.5, 1, 1.5, 2];
+  const playbackSpeedOptions = [0.5, 1, 1.5, 2, 2.5, 3];
 
   // Helper to set user-select on body
   function setBodyUserSelect(value: string) {
